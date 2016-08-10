@@ -1,0 +1,21 @@
+html, body {
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+    background: black;
+    height: 100%;
+}
+
+#container {
+    height: 100%;
+    width: 100%;
+}
+
+.display-things {
+    display: inline-block;
+    position: fixed;
+    top: 0;
+    left: 0;
+    color: white;
+    background: blue;
+}
