@@ -148,7 +148,6 @@ export default class Star {
     constructor(position: Vector3, attr: {
         color: Color;
         texture: Texture;
-        displayLight: boolean;
         displayHalo: boolean;
         applyDistortion: boolean;
         size: number;
@@ -187,9 +186,7 @@ export default class Star {
         }
         var shiny = new Mesh(new SphereGeometry(attr.size, 32, 32), starMaterial);
 
-        if (attr.displayLight) {
-            shiny.add(new PointLight(attr.color.getHex(), 3, attr.size * 2, 2));
-        }
+        shiny.add(new PointLight(0xffcccc, 2, attr.size * 5, 1));
 
         shiny.position.copy(position);
 

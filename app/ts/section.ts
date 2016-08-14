@@ -61,9 +61,8 @@ export default class Section {
     nextSection: Section;
     pos: Vector3;
     points: Vector3[];
-    cubeCamera: CubeCamera;
 
-    constructor(previousSection: Section, position: Vector3, nextPosition: Vector3, size: number, envMap: Texture) {
+    constructor(previousSection: Section, position: Vector3, nextPosition: Vector3, size: number) {
         if (previousSection) {
             previousSection.nextSection = this;
         }
@@ -127,30 +126,26 @@ export default class Section {
                 addQuadFaces(geometry.faces, i * 8 + 2, i * 8 + 3, i * 8 + 6, i * 8 + 7);
             }
 
-            var faceMaterial = new MeshPhysicalMaterial( {
-                color: 0x8DEEEE,
-                metalness: 0.9,
-                roughness: 0,
-                // opacity: 0.1,
-                reflectivity: 0.98,
+            var faceMaterial = new MeshLambertMaterial( {
+                color: 0xaaaaaa,
+                opacity: 0.3,
                 side: DoubleSide,
                 transparent: true,
-                shading: SmoothShading,
-                envMapIntensity: 1,
                 premultipliedAlpha: true,
-                refractionRatio: 0.99,
-                envMap: envMap
             });
-            // var faceMaterial = new MeshBasicMaterial( { color: 0xffffff, envMap: envMap, refractionRatio: 0.4} )
+            faceGeometry.translate(-position.x, -position.y, -position.z);
             this.faces = new Mesh(faceGeometry, faceMaterial);
+            this.faces.position.copy(position);
             faceGeometry.computeFaceNormals();
             faceGeometry.computeVertexNormals();
 
+            geometry.translate(-position.x, -position.y, -position.z);
             this.lines = new Mesh(geometry, new MeshLambertMaterial( {
                 color: 0xffffff,
                 reflectivity: 1,
                 side: DoubleSide
             }));
+            this.lines.position.copy(position);
             geometry.computeFaceNormals();
             geometry.computeVertexNormals();
         }

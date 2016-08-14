@@ -41,9 +41,8 @@ export default class Tunnel {
     private _lastReusableSection: Section;
     private _sectionLength: number;
     private _nextPos: Vector3;
-    private _maxDisplaySection = 100;
+    private _maxDisplaySection = 200;
     private _counter = 0;
-    private _envMap: Texture;
     private _toAddSection: boolean;
     private _sectionsPassed: number;
 
@@ -60,9 +59,6 @@ export default class Tunnel {
     }
 
     setupScene(display: Display) {
-        if (!this._envMap) {
-            this._envMap = display.cubeCamera.renderTarget.texture;
-        }
         while (this._maxDisplaySection > this._sectionLength) {
             this.genNewSection(display);
         }
@@ -78,30 +74,6 @@ export default class Tunnel {
             this._toAddSection = false;
         }
         this._counter++;
-
-        var cur = this._lastReusableSection;
-        var count = this._sectionLength - this._maxDisplaySection;
-        while(cur && count < this._sectionsPassed + 6) {
-            cur.setVisible(false);
-            count++;
-            cur = cur.nextSection;
-        }
-        while(cur && count < this._sectionsPassed + 15) {
-            cur = cur.nextSection;
-            cur.setFacesVisible(false);
-            count++;
-        }
-        // while(cur) {
-        //     cur = cur.nextSection;
-        // }
-        display.cubeCamera.updateCubeMap( display._renderer._renderer, display.scene );
-
-        var cur = this._lastReusableSection;
-        while(cur) {
-            cur.setVisible(true);
-            cur = cur.nextSection;
-        }
-
     }
 
     genNewSection(display: Display) {
@@ -116,7 +88,7 @@ export default class Tunnel {
 
     addSection(start: Vector3, end: Vector3, size: number, scene: Scene) {
         if (this._sectionLength < this._maxDisplaySection) {
-            this._curSection = new Section(this._curSection, start, end, size, this._envMap);
+            this._curSection = new Section(this._curSection, start, end, size);
             if (!this._lastReusableSection) {
                 this._lastReusableSection = this._curSection;
             }
@@ -124,7 +96,7 @@ export default class Tunnel {
             var section = this._lastReusableSection;
             this._lastReusableSection = section.nextSection;
             section.removeFrom(scene);
-            this._curSection = new Section(this._curSection, start, end, size, this._envMap);
+            this._curSection = new Section(this._curSection, start, end, size);
         }
         this._sectionLength += 1;
         this._curSection.addTo(scene);

@@ -79,7 +79,7 @@ export default class MapGenerator {
 
     genMap() {
         this._stars = [
-            Stars.genRandom(new Vector3(0, 0, this._step * 10))
+            Stars.genRandom(new Vector3(0, 0, this._step * 70))
         ];
         var start = new Vector3();
         var cur = this._stars[0].position;
@@ -106,10 +106,10 @@ export default class MapGenerator {
         while (count < 10) {
             var length = randomRange(20, 40) * this._step * mul;
             var dir = oldDir.clone().applyAxisAngle(new Vector3(
-                randomRange(-0.1, 0.1),
+                randomRange(-0.001, 0.001),
                 randomRange(-1, 1),
                 randomRange(-1, 1)
-            ).normalize(), Math.PI / 4);
+            ).normalize(), Math.PI / 3);
             var point = curPoint.clone().add(dir.setLength(length));
             if (this._stars.every((star) => {
                 return dist(point, star.position) > distAdd + this._getDist(star);

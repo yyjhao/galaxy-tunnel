@@ -83,6 +83,7 @@ export default class Galaxy {
 
     setupScene(display: Display) {
         this.pointClouds.forEach((p) => {
+            p.renderOrder = -1;
             display.scene.add(p);
         });
     }
