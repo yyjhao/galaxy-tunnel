@@ -132,7 +132,9 @@ void main()
 `;
 
 var noiseTexture = (new TextureLoader()).load( 'cloud.png' );
-noiseTexture.wrapS = noiseTexture.wrapT = RepeatWrapping
+noiseTexture.wrapS = noiseTexture.wrapT = RepeatWrapping;
+
+export var haloScale = 1.1;
 
 export default class Star {
     mesh: Mesh;
@@ -141,6 +143,7 @@ export default class Star {
     starUniforms: any;
     size: number;
     rotationMatrix: Matrix4;
+    position: Vector3;
 
     constructor(position: Vector3, attr: {
         color: Color;
@@ -151,6 +154,7 @@ export default class Star {
         size: number;
     }) {
         this.size = attr.size;
+        this.position = position;
         var starMaterial: Material;
         attr.texture.wrapS = attr.texture.wrapT = RepeatWrapping;
         if (attr.applyDistortion) {
@@ -184,7 +188,7 @@ export default class Star {
         var shiny = new Mesh(new SphereGeometry(attr.size, 32, 32), starMaterial);
 
         if (attr.displayLight) {
-            shiny.add(new PointLight(attr.color.getHex(), 3, 30000, 2));
+            shiny.add(new PointLight(attr.color.getHex(), 3, attr.size * 2, 2));
         }
 
         shiny.position.copy(position);
@@ -207,7 +211,7 @@ export default class Star {
 
         	var ballGeometry = new SphereGeometry(attr.size, 32, 32);
         	var halo = new Mesh(ballGeometry, customMaterial);
-            halo.scale.multiplyScalar(1.1);
+            halo.scale.multiplyScalar(haloScale);
             halo.position.copy(position);
 
             this.halo = halo;
@@ -247,5 +251,21 @@ export default class Star {
     }
 
     updateScene(display: Display) {
+    }
+
+    getWrapSize() {
+        if (this.halo) {
+            return this.size * haloScale;
+        } else {
+            return this.size;
+        }
+    }
+
+    setPosition(position: Vector3) {
+        this.position.copy(position);
+        this.mesh.position.copy(position);
+        if (this.halo) {
+            this.halo.position.copy(position);
+        }
     }
 }

@@ -38,7 +38,7 @@ export default class Display extends VRViewer {
 			scene.add(light);
             scene.add(light.target);
 
-            cubeCamera = new CubeCamera(50, 100000, 1024);
+            cubeCamera = new CubeCamera(50, 100000, 512);
             cubeCamera.renderTarget.texture.mapping = CubeRefractionMapping;
             scene.add(cubeCamera);
             return camera;

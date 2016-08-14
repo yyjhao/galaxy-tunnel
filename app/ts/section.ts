@@ -129,16 +129,16 @@ export default class Section {
 
             var faceMaterial = new MeshPhysicalMaterial( {
                 color: 0x8DEEEE,
-                metalness: 0.95,
+                metalness: 0.9,
                 roughness: 0,
                 // opacity: 0.1,
                 reflectivity: 0.98,
                 side: DoubleSide,
                 transparent: true,
                 shading: SmoothShading,
-                envMapIntensity: 2,
+                envMapIntensity: 1,
                 premultipliedAlpha: true,
-                refractionRatio: 0.98,
+                refractionRatio: 0.99,
                 envMap: envMap
             });
             // var faceMaterial = new MeshBasicMaterial( { color: 0xffffff, envMap: envMap, refractionRatio: 0.4} )

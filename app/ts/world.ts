@@ -30,9 +30,7 @@ export default class World {
         this.tunnel = new Tunnel(this.mapGenerator);
         this.galaxy = new Galaxy();
 
-        this.objects = this.mapGenerator.getStars().map((pos) => {
-            return Stars.genRandom(pos);
-        });
+        this.objects = this.mapGenerator.getStars().concat([]);
     }
 
     update(control: Control) {
