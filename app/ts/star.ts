@@ -36,31 +36,6 @@ import {
 
 import Display from "./display";
 
-var fragment = `
-uniform vec3 glowColor;
-varying float intensity;
-void main()
-{
-	vec3 glow = glowColor * intensity;
-    gl_FragColor = vec4( glow, 0.7 );
-}`;
-
-var vertex = `
-uniform vec3 viewVector;
-uniform float c;
-uniform float p;
-uniform float time;
-varying float intensity;
-void main()
-{
-    vec3 vNormal = normalize( normalMatrix * normal );
-	vec3 vNormel = normalize( normalMatrix * viewVector );
-	intensity = pow( c - dot(vNormal, vNormel), p );
-
-    gl_Position = projectionMatrix * modelViewMatrix * vec4( position, 1.0 );
-}
-`
-
 var starVertex = `
 uniform sampler2D noiseTexture;
 uniform float noiseScale;
@@ -134,12 +109,10 @@ void main()
 var noiseTexture = (new TextureLoader()).load( 'cloud.png' );
 noiseTexture.wrapS = noiseTexture.wrapT = RepeatWrapping;
 
-export var haloScale = 1.1;
+export var haloScale = 1.2;
 
 export default class Star {
     mesh: Mesh;
-    halo: Mesh;
-    uniform: any;
     starUniforms: any;
     size: number;
     rotationMatrix: Matrix4;
@@ -148,7 +121,6 @@ export default class Star {
     constructor(position: Vector3, attr: {
         color: Color;
         texture: Texture;
-        displayHalo: boolean;
         applyDistortion: boolean;
         size: number;
     }) {
@@ -190,30 +162,6 @@ export default class Star {
 
         shiny.position.copy(position);
 
-        if (attr.displayHalo) {
-            this.uniform = {
-                "c":   { type: "f", value: 0.1 },
-                "p":   { type: "f", value: 4 },
-                glowColor: { type: "c", value: attr.color },
-                viewVector: { type: "v3", value: new Vector3() }
-            };
-            var customMaterial = new ShaderMaterial({
-        	    uniforms: this.uniform,
-        		vertexShader: vertex,
-        		fragmentShader: fragment,
-        		side: FrontSide,
-        		blending: AdditiveBlending,
-        		transparent: true
-        	});
-
-        	var ballGeometry = new SphereGeometry(attr.size, 32, 32);
-        	var halo = new Mesh(ballGeometry, customMaterial);
-            halo.scale.multiplyScalar(haloScale);
-            halo.position.copy(position);
-
-            this.halo = halo;
-        }
-
         this.mesh = shiny;
         var priorRotationMatrix = new Matrix4();
         var axis = new Vector3(
@@ -241,28 +189,17 @@ export default class Star {
 
     setupScene(display: Display) {
         display.scene.add(this.mesh);
-        if (this.halo) {
-            display.scene.add(this.halo);
-            this.uniform.viewVector.value = display.camera.position;
-        }
     }
 
     updateScene(display: Display) {
     }
 
     getWrapSize() {
-        if (this.halo) {
-            return this.size * haloScale;
-        } else {
-            return this.size;
-        }
+        return this.size;
     }
 
     setPosition(position: Vector3) {
         this.position.copy(position);
         this.mesh.position.copy(position);
-        if (this.halo) {
-            this.halo.position.copy(position);
-        }
     }
 }
