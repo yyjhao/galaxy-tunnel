@@ -24,7 +24,7 @@ export class Sun extends Star {
             texture: sunTexture,
             displayHalo: true,
             applyDistortion: true,
-            size: 10000
+            size: 20000
         })
     }
 }

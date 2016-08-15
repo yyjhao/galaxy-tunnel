@@ -184,7 +184,7 @@ export default class Star {
                 map: attr.texture
             });
         }
-        var shiny = new Mesh(new SphereGeometry(attr.size, 32, 32), starMaterial);
+        var shiny = new Mesh(new SphereGeometry(attr.size, 64, 64), starMaterial);
 
         shiny.position.copy(position);
 
@@ -204,7 +204,7 @@ export default class Star {
         		transparent: true
         	});
 
-        	var ballGeometry = new SphereGeometry(attr.size, 32, 32);
+        	var ballGeometry = new SphereGeometry(attr.size, 64, 64);
             ballGeometry.computeFaceNormals();
             ballGeometry.computeVertexNormals();
         	var halo = new Mesh(ballGeometry, customMaterial);
