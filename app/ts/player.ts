@@ -63,12 +63,12 @@ export default class Player {
             return;
         }
         var beta = control.motionTracker.getBeta();
-        this._acceleration.copy(this._speed).setLength(2);
+        this._acceleration.copy(this._speed).setLength(3);
         this._acceleration.applyAxisAngle(yAxis, horizontalRotation(beta));
 
         // this._acceleration.z = 0.01;
         this._speed.add(this._acceleration);
-        this._speed.clampLength(0, 60);
+        this._speed.clampLength(0, 80);
 
 
         this._playerTracker.updateSection(this._position);
@@ -79,7 +79,6 @@ export default class Player {
         // this._speed.set(newPos.x - this._position.x, newPos.y - this._position.y, newPos.z - this._position.z);
         // this._position.copy(newPos);
         this._speed.add(this._acceleration);
-        this._speed.clampLength(0, 60);
         this._position.add(this._speed);
 
         this._direction.setFromUnitVectors(

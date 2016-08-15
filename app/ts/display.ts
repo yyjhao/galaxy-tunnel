@@ -27,6 +27,7 @@ export default class Display extends VRViewer {
         super(container, motionTracker, (scene: Scene, renderer: WebGLRenderer) => {
             var camera = new PerspectiveCamera(100, window.innerWidth / window.innerHeight, 50, 1000000);
             scene.add(camera);
+            scene.add(new AmbientLight(0xffdddd, 0.1))
             camera.position.z = 0;
             camera.lookAt(new Vector3(0, 0, 500));
             light = new SpotLight(0xffffff, 1, 7000, 0.6, 1, 2);

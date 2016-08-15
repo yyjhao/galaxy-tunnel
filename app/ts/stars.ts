@@ -22,8 +22,9 @@ export class Sun extends Star {
         super(position, {
             color: new Color(0xFB7516),
             texture: sunTexture,
+            displayHalo: true,
             applyDistortion: true,
-            size: 50000
+            size: 10000
         })
     }
 }
@@ -33,6 +34,7 @@ export class Io extends Star {
         super(position, {
             color: new Color(0xffffff),
             texture: ioTexture,
+            displayHalo: false,
             applyDistortion: true,
             size: 5000
         })
@@ -44,6 +46,7 @@ export class Jupiter extends Star {
         super(position, {
             color: new Color(0xffffff),
             texture: jupiterTexture,
+            displayHalo: true,
             applyDistortion: true,
             size: 10000
         })
@@ -55,6 +58,7 @@ export class Mars extends Star {
         super(position, {
             color: new Color(0xCA9346),
             texture: marsTexture,
+            displayHalo: true,
             applyDistortion: false,
             size: 1000
         })
@@ -66,6 +70,7 @@ export class Neptune extends Star {
         super(position, {
             color: new Color(0x7AB1D2),
             texture: neptuneTexture,
+            displayHalo: true,
             applyDistortion: true,
             size: 5000
         })
@@ -77,6 +82,7 @@ export class Saturn extends Star {
         super(position, {
             color: new Color(0xffffff),
             texture: saturnTexture,
+            displayHalo: true,
             applyDistortion: false,
             size: 4000
         })
@@ -88,6 +94,7 @@ export class Uranus extends Star {
         super(position, {
             color: new Color(0xffffff),
             texture: uranusTexture,
+            displayHalo: false,
             applyDistortion: false,
             size: 2000
         })
@@ -99,6 +106,7 @@ export class Venus extends Star {
         super(position, {
             color: new Color(0xffffff),
             texture: venusTexture,
+            displayHalo: false,
             applyDistortion: false,
             size: 1000
         })
@@ -110,6 +118,7 @@ export class Trantor extends Star {
         super(position, {
             color: new Color(0xffffff),
             texture: trantorTexture,
+            displayHalo: false,
             applyDistortion: false,
             size: 1000
         })
