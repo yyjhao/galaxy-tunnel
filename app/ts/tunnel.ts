@@ -41,7 +41,7 @@ export default class Tunnel {
     private _lastReusableSection: Section;
     private _sectionLength: number;
     private _nextPos: Vector3;
-    private _maxDisplaySection = 200;
+    private _maxDisplaySection = 150;
     private _counter = 0;
     private _toAddSection: boolean;
     private _sectionsPassed: number;
@@ -82,6 +82,9 @@ export default class Tunnel {
         }
         var curPos = this._nextPos;
         var next = this._mapGenerator.getNext();
+        if (!next) {
+            return;
+        }
         this._nextPos = next.position;
         this.addSection(curPos, this._nextPos, next.size, display.scene);
     }

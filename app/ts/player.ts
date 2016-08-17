@@ -40,7 +40,7 @@ export default class Player {
     private _done = false;
 
     constructor() {
-        this._position = new Vector3();
+        this._position = new Vector3(0, 0, 40);
         this._speed = new Vector3(0, 0, 40);
         this._acceleration = new Vector3(0, 0, 5);
         this._direction = new Quaternion();

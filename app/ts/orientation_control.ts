@@ -79,7 +79,9 @@ export default class OrientationControl {
             this._alignQuaternion.setFromEuler(tempEuler);
         }
 
-        this._camera.quaternion.copy(this._defaultRotation);
+        if (this._defaultRotation) {
+            this._camera.quaternion.copy(this._defaultRotation);
+        }
         this._camera.quaternion.multiply(this._alignQuaternion);
         this._camera.quaternion.multiply(orientationQuaternion);
     }

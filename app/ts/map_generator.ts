@@ -17,6 +17,33 @@ export interface SectionInfo {
     size: number;
 }
 
+function getControlPoints(p1: Vector3, p2: Vector3, p3: Vector3, tension: number){
+    var d12 = p1.clone().sub(p2).length();
+    var d23 = p2.clone().sub(p3).length();
+    var fa = tension * d12 / (d12+d23);
+    var fb = tension * d23 / (d12+d23);
+    var c1 = p2.clone().sub(p3.clone().sub(p1).multiplyScalar(fa));
+    var c2 = p2.clone().add(p3.clone().sub(p1).multiplyScalar(fb));
+
+    return {
+        left: c1,
+        right: c2
+    };
+}
+
+function quadratic(start: Vector3, end: Vector3, control: Vector3, t: number) {
+    return start.clone().multiplyScalar(Math.pow(1 - t, 2))
+            .add(control.clone().multiplyScalar(2 * (1 - t) * t))
+            .add(end.clone().multiplyScalar(t * t));
+}
+
+function cubic(start: Vector3, end: Vector3, control1: Vector3, control2: Vector3, t: number) {
+    return start.clone().multiplyScalar(Math.pow(1 - t, 3))
+            .add(control1.clone().multiplyScalar(3 * Math.pow(1 - t, 2) * t))
+            .add(control2.clone().multiplyScalar(3 * (1 - t) * t * t))
+            .add(end.clone().multiplyScalar(t * t * t));
+}
+
 export default class MapGenerator {
     private _step: number;
     private _cur: Vector3;
@@ -47,82 +74,59 @@ export default class MapGenerator {
     }
 
     getNext(): SectionInfo {
-        if (this._pointInd < this._points.length) {
-            var r = {
-                position: this._points[this._pointInd],
-                size: 1.0
-            };
-            this._cur = this._points[this._pointInd].clone();
-            this._pointInd += 1;
-            return r;
-        } else {
-            var vec = new Vector3(0, Math.floor(Math.random() * this._mag * 2) - this._mag, this._step);
-            // var vec = new Vector3(Math.floor(Math.random() * this._mag * 2) - this._mag, Math.floor(Math.random() * this._mag * 2) - this._mag, this._step);
-            // var vec = new Vector3(200, 400, this._step);
-            // var vec = new Vector3(200, 400, this._step / 2);
-            // var vec = new Vector3(0, Math.floor(Math.random() * this._mag * 2) - this._mag, this._step);
-            // var vec = new Vector3(0, 0, this._step);
-            // var vec = new Vector3(Math.floor(Math.random() * this._mag * 2) - this._mag, 0, this._step);
-            // var axis = new Vector3( 0, 1, 0 );
-            // var angle = 0.1;
-            // this._prevVec.applyAxisAngle( axis, angle );
-            // var vec = this._prevVec.clone();
-            // vec.y = 100;
-            // vec.setLength(this._step);
-            this._cur.add(vec);
-            return {
-                position: this._cur.clone(),
-                size: 1.0
-            };
+        if (this._pointInd >= this._points.length) {
+            this._pointInd = 0;
         }
+        var r = {
+            position: this._points[this._pointInd],
+            size: 1.0
+        };
+        this._cur = this._points[this._pointInd].clone();
+        this._pointInd += 1;
+        return r;
     }
 
     genMap() {
-        this._stars = [
-            Stars.genRandom(new Vector3(0, 0, this._step * 70))
-        ];
-        var start = new Vector3();
-        var cur = this._stars[0].position;
-        var dir = new Vector3(0, 0, 1);
-        for (var i = 0; i < 7; i++) {
-            var star = Stars.genRandom(new Vector3());
-            var nextPoint = this._genNextBigPoint(cur, dir, star);
-            star.setPosition(nextPoint);
-            this._stars.push(star);
-            dir.subVectors(nextPoint, cur).setLength(1);
-            cur = nextPoint;
-        }
+        this._stars = [];
+        var numStars = 8;
+        var radius = 9 * this._step * numStars;
+        var center = new Vector3(radius, 0, 0);
+        var pointer = new Vector3(-radius, 0, 0);
 
-        this._genPoints(start, this._genNextBigPoint(cur, dir, null));
+        for(var i = 0; i < numStars; i++) {
+            pointer.applyAxisAngle(new Vector3(0, 1, 0), Math.PI * 2 / (numStars + 1));
+            var star = Stars.genRandom(new Vector3());
+            if (i === 0) {
+                var pos = center.clone().add(pointer);
+            } else {
+                var pos = this._genStarPoint(center.clone().add(pointer), star, radius);
+            }
+            star.setPosition(pos);
+            this._stars.push(star);
+        }
+        this._genPoints(new Vector3(), new Vector3(0, 0, -this._step));
     }
 
-    private _genNextBigPoint(curPoint: Vector3, oldDir: Vector3, star: Star) {
+    private _genStarPoint(point: Vector3, star: Star, radius: number) {
         var distAdd = Section.size * 3;
         if (star) {
             distAdd += this._getDist(star);
         }
         var count = 0;
-        var mul = 1;
         while (count < 10) {
-            var length = randomRange(20, 40) * this._step * mul;
-            var dir = oldDir.clone().applyAxisAngle(new Vector3(
-                randomRange(-0.001, 0.001),
-                randomRange(-1, 1),
-                randomRange(-1, 1)
-            ).normalize(), Math.PI / 3);
-            var point = curPoint.clone().add(dir.setLength(length));
+            var mag = radius * 0.7;
+            var p = point.clone().add(new Vector3(
+                randomRange(-mag, mag),
+                randomRange(-mag / 10, mag / 10),
+                randomRange(-mag, mag)
+            ));
             if (this._stars.every((star) => {
-                return dist(point, star.position) > distAdd + this._getDist(star);
+                return dist(p, star.position) > distAdd + this._getDist(star);
             })) {
-                return point;
-            }
-            count += 1;
-            if (count === 10) {
-                count = 0;
-                mul *= 2;
-                console.log("mul is", mul);
+                return p;
             }
         }
+        throw "no";
     }
 
     private _genPoints(start: Vector3, end: Vector3) {
@@ -141,7 +145,7 @@ export default class MapGenerator {
             var curStarPoint = this._stars[starInd].position;
             var minDist = this._getDist(this._stars[starInd]);
 
-            var dir = nextNextPoint.clone().sub(cur);
+            var dir = nextNextPoint.clone().sub(cur).normalize();
             var plane = new Plane().setFromNormalAndCoplanarPoint(dir, curStarPoint);
 
             var starDir = curStarPoint.clone().sub(cur);
@@ -157,6 +161,15 @@ export default class MapGenerator {
                         .setLength(minDist)
                         .add(curStarPoint);
 
+            var connectLine = new Line3(
+                cur.clone().sub(dir.clone().setLength(9999999)),
+                nextNextPoint.clone().add(dir.clone().setLength(9999999)));
+            var starDir = plane.intersectLine(connectLine).sub(curStarPoint);
+            var pointDir = point.clone().sub(curStarPoint);
+            if (pointDir.clone().projectOnVector(starDir).add(starDir).length() > starDir.length()) {
+                point = curStarPoint.clone().sub(pointDir);
+            }
+
             connectPoints.push(point);
             cur = curStarPoint;
 
@@ -164,79 +177,83 @@ export default class MapGenerator {
         }
         connectPoints.push(end);
 
-        this._points.push(connectPoints[0]);
-        var pointToStar: number[] = [null];
+        var controlPoints: Vector3[] = [];
+        var pointToStar: number[] = [];
+        connectPoints.forEach((point, ind) => {
+            if (ind + 2 >= connectPoints.length) return;
+            var cur = point,
+                next = connectPoints[ind + 1],
+                nextNext = connectPoints[ind + 2];
+
+            var {left, right} = getControlPoints(cur, next, nextNext, 0.5);
+            controlPoints.push(left, right);
+        });
         connectPoints.forEach((point, ind) => {
             if (ind + 1 === connectPoints.length) return;
             var nextPoint = connectPoints[ind + 1];
-            var dir = nextPoint.clone().sub(point).setLength(this._step);
-            var cur = point.clone();
-            var totalDist = dist(cur, nextPoint);
-
-            var minDist: number;
-            var starPosition: Vector3;
-            var previousStarPosition: Vector3;
-            var previousMinDist: number;
-            if (ind < this._stars.length) {
-                minDist = this._getDist(this._stars[ind]);
-                starPosition = this._stars[ind].position;
+            var numSteps = Math.ceil(nextPoint.clone().sub(point).length() / this._step);
+            var tstep = 1 / numSteps;
+            if (ind === 0) {
+                for (var i = 0; i < numSteps; i += 1) {
+                    this._points.push(quadratic(point, nextPoint, controlPoints[0], i * tstep));
+                }
+            } else if (ind + 2 === connectPoints.length) {
+                for (var i = 0; i < numSteps; i+= 1) {
+                    this._points.push(quadratic(point, nextPoint, controlPoints[ind * 2 - 1], i * tstep));
+                }
+                this._points.push(nextPoint);
+            } else {
+                for (var i = 0; i < numSteps; i+= 1) {
+                    this._points.push(cubic(point, nextPoint, controlPoints[ind * 2 - 1], controlPoints[ind * 2], i * tstep));
+                }
             }
             if (ind > 0) {
-                previousStarPosition = this._stars[ind - 1].position;
-                previousMinDist = this._getDist(this._stars[ind - 1]);
-            }
-            for (var i = 1; i < totalDist / this._step; i++) {
-                cur.add(dir);
-                var pointToAdd = cur.clone();
-                if (starPosition) {
-                    pointToAdd.sub(starPosition).clampLength(minDist, 1/0).add(starPosition);
-                }
-                if (previousStarPosition) {
-                    pointToAdd.sub(previousStarPosition).clampLength(previousMinDist, 1/0).add(previousStarPosition);
-                }
-                this._points.push(pointToAdd);
-
-                if (!starPosition && !previousStarPosition) {
-                    pointToStar.push(null);
-                } else if (!starPosition) {
+                for (var i = 0; i < numSteps / 2; i++) {
                     pointToStar.push(ind - 1);
-                } else if (!previousStarPosition) {
-                    pointToStar.push(ind);
-                } else {
-                    if (dist(starPosition, pointToAdd) > dist(previousStarPosition, pointToAdd)) {
-                        pointToStar.push(ind - 1);
-                    } else {
-                        pointToStar.push(ind);
-                    }
+                }
+            } else {
+                for (var i = 0; i < numSteps / 2; i++) {
+                    pointToStar.push(null);
                 }
             }
-            var left = totalDist - Math.floor(totalDist / this._step) * this._step;
-            if (left > this._step / 10) {
-                this._points.push(nextPoint);
-                pointToStar.push(ind);
+            if (ind + 2 < connectPoints.length) {
+                for (var i = Math.ceil(numSteps / 2); i < numSteps; i++) {
+                    pointToStar.push(ind);
+                }
+            } else {
+                for (var i = Math.ceil(numSteps / 2); i <= numSteps; i++) {
+                    pointToStar.push(null);
+                }
             }
         });
-        for (var i = 0; i < 10; i++) {
-            this._points = this._smooth(this._points, 2, pointToStar);
+
+        for (var i = 0; i < 30; i++) {
+            this._points = this._smooth(this._points, 1, pointToStar);
         }
     }
 
     private _getDist(star: Star) {
-        return star.getWrapSize() + Section.size * 1.5;
+        return star.getWrapSize() + Section.size * 3;
     }
 
     private _smooth(path: Vector3[], neighbour: number, pointToStar: number[]) {
         var newPath: Vector3[] = [];
         path.forEach((point, ind) => {
-            if (ind < neighbour || ind >= path.length - neighbour) {
+            if (ind === 0 || ind === path.length - 1) {
                 newPath.push(point);
                 return;
             }
+            var tmpNeighbour = neighbour;
+            if (ind < neighbour) {
+                tmpNeighbour = ind;
+            } else if (ind >= path.length - neighbour) {
+                tmpNeighbour = path.length - 1 - ind;
+            }
             var newPoint = new Vector3();
-            for (var i = ind - neighbour; i <= ind + neighbour; i++) {
+            for (var i = ind - tmpNeighbour; i <= ind + tmpNeighbour; i++) {
                 newPoint.add(path[i]);
             }
-            newPoint.divideScalar(neighbour * 2 + 1);
+            newPoint.divideScalar(tmpNeighbour * 2 + 1);
             var starInd = pointToStar[ind];
             if (starInd !== null) {
                 var star = this._stars[starInd];
