@@ -8,7 +8,8 @@ import {
     DoubleSide,
     Plane,
     Intersection,
-    Line3
+    Line3,
+    Face3
 } from "three"
 
 import Section from "./section";
@@ -19,28 +20,26 @@ import {
 export default class PlayerTracker {
     _curSection: Section;
     _curSectionCenter: Vector3;
-    _isOut: boolean;
     _boundingShape: Mesh;
     _movementPlane: Plane;
     _sectionsPassed: number;
+    _collisionPoint: Vector3;
+    _collisionPlane: Plane;
 
     constructor(curSection: Section) {
         this.setCurSection(this.getBoundingShape(curSection), curSection);
-        this._isOut = false;
         this._sectionsPassed = 1;
+    }
+
+    getCollision() {
+        return this._collisionPoint;
     }
 
     getSectionsPassed() {
         return this._sectionsPassed;
     }
 
-    isOut() {
-        return this._isOut;
-    }
-
     getAdjusted(position: Vector3) {
-        if (this._isOut) return position;
-        // return this._movementPlane.projectPoint(position);
         return this._movementPlane.intersectLine(new Line3(position.clone().setY(-100000), position.clone().setY(100000)))
     }
 
@@ -106,18 +105,47 @@ export default class PlayerTracker {
     }
 
     updateSection(position: Vector3) {
-        if (this._isOut) return;
         var disp = new Vector3().subVectors(this._curSectionCenter, position);
+        this._collisionPoint = null;
         if (disp.length() < Section.size * 0.9) return;
         disp.normalize();
         var ray = new Raycaster(position, disp);
-        if (this._filterIntersections(ray.intersectObject(this._boundingShape)).length !== 1) {
+        var intersections = this._filterIntersections(ray.intersectObject(this._boundingShape));
+        var nextIntersections: any[];
+        if (intersections.length !== 1) {
             var nextBoundingShape = this.getBoundingShape(this._curSection.nextSection);
-            if (this._filterIntersections(ray.intersectObject(nextBoundingShape)).length === 1) {
+            nextIntersections = this._filterIntersections(ray.intersectObject(nextBoundingShape));
+            if (nextIntersections.length === 1) {
                 this.setCurSection(nextBoundingShape, this._curSection.nextSection);
                 this._sectionsPassed += 1;
             } else {
-                this._isOut = true;
+                var dist = 1/0;
+                var collisionFace: Face3;
+                intersections.forEach(({ distance, face }) => {
+                    if (distance < dist) {
+                        dist = distance;
+                        collisionFace = face;
+                    }
+                });
+                var isNext = false;
+                nextIntersections.forEach(({ distance, face }) => {
+                    if (distance < dist) {
+                        dist = distance;
+                        collisionFace = face;
+                        isNext = true;
+                    }
+                });
+
+                if (isNext) {
+                    this.setCurSection(nextBoundingShape, this._curSection.nextSection);
+                    this._sectionsPassed += 1;
+                }
+                this._collisionPlane = new Plane().setFromCoplanarPoints(
+                    this._boundingShape.geometry.vertices[collisionFace.a],
+                    this._boundingShape.geometry.vertices[collisionFace.b],
+                    this._boundingShape.geometry.vertices[collisionFace.c]
+                );
+                this._collisionPoint = this._collisionPlane.projectPoint(position);
             }
         }
     }

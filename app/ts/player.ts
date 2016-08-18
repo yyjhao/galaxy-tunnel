@@ -37,7 +37,6 @@ export default class Player {
     private _acceleration: Vector3;
     private _direction: Quaternion;
     private _playerTracker: PlayerTracker;
-    private _done = false;
 
     constructor() {
         this._position = new Vector3(0, 0, 40);
@@ -59,27 +58,28 @@ export default class Player {
     }
 
     update(world: World, control: Control) {
-        if (this._playerTracker.isOut()) {
-            return;
-        }
         var beta = control.motionTracker.getBeta();
-        this._acceleration.copy(this._speed).setLength(3);
+        this._acceleration.copy(this._speed).divideScalar(30).clampLength(0.1, 3);
         this._acceleration.applyAxisAngle(yAxis, horizontalRotation(beta));
 
-        // this._acceleration.z = 0.01;
         this._speed.add(this._acceleration);
         this._speed.clampLength(0, 80);
 
+        var newPos = new Vector3().addVectors(this._position, this._speed);
+        this._playerTracker.updateSection(newPos);
+        var collision = this._playerTracker.getCollision();
+        if (collision) {
+            newPos = collision;
+            this._speed.multiplyScalar(0.3);
+            newPos = this._playerTracker.getAdjusted(newPos);
+            this._position.copy(newPos);
+        } else {
+            newPos = this._playerTracker.getAdjusted(newPos);
 
-        this._playerTracker.updateSection(this._position);
-        var newPos = this._playerTracker.getAdjusted(
-            new Vector3().addVectors(this._position, this._speed));
-
-        this._acceleration.subVectors(newPos, this._position).sub(this._speed).clampLength(0, 5);
-        // this._speed.set(newPos.x - this._position.x, newPos.y - this._position.y, newPos.z - this._position.z);
-        // this._position.copy(newPos);
-        this._speed.add(this._acceleration);
-        this._position.add(this._speed);
+            this._acceleration.subVectors(newPos, this._position).sub(this._speed).clampLength(0, 5);
+            this._speed.add(this._acceleration);
+            this._position.add(this._speed);
+        }
 
         this._direction.setFromUnitVectors(
             new Vector3(0, 0, 1),
@@ -88,23 +88,7 @@ export default class Player {
     }
 
     updateScene(display: Display) {
-        if (this._done) {
-            return;
-        }
-        // display.scene.add(this._playerTracker._boundingShape);
-        if (this._playerTracker.isOut()) {
-            var mesh = new Mesh(new BoxGeometry(100, 100, 100), new MeshBasicMaterial({color: 0x00ff00}));
-            mesh.position.copy(this._position);
-            var mesh2 = new Mesh(new BoxGeometry(10, 10, 10), new MeshBasicMaterial({color: 0xff0000}));
-            mesh2.position.copy(new Vector3().subVectors(this._position, this._speed));
-            display.scene.add(mesh);
-            display.scene.add(mesh2);
-            display.setCameraPosition(new Vector3().subVectors(this._position, this._speed.setLength(1000)));
-
-            this._done = true;
-        } else {
-            display.setCameraPosition(this._position);
-            display.setCameraDefaultRotation(this._direction);
-        }
+        display.setCameraPosition(this._position);
+        display.setCameraDefaultRotation(this._direction);
     }
 }

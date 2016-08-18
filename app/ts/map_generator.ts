@@ -185,7 +185,7 @@ export default class MapGenerator {
                 next = connectPoints[ind + 1],
                 nextNext = connectPoints[ind + 2];
 
-            var {left, right} = getControlPoints(cur, next, nextNext, 0.5);
+            var {left, right} = getControlPoints(cur, next, nextNext, 0.9);
             controlPoints.push(left, right);
         });
         connectPoints.forEach((point, ind) => {
